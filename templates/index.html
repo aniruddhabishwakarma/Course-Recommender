@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Homepage - Courses</title>
+    <link
+      href="{{ url_for('static', filename='css/output.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto py-8">
+      <h1 class="text-4xl font-bold text-center mb-8">
+        Welcome to Our Course Platform
+      </h1>
+
+      <!-- Search Courses Section -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-2">Search Courses</h2>
+        <form id="searchForm" class="flex items-center space-x-4">
+          <input
+            id="searchKeyword"
+            type="text"
+            placeholder="Enter a keyword"
+            class="border border-gray-300 p-2 w-full md:w-1/2 rounded-lg"
+          />
+          <button type="submit" class="bg-blue-600 text-white p-2 rounded-lg">
+            Search
+          </button>
+        </form>
+      </div>
+
+      <!-- Display All Courses Section -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-4">All Courses</h2>
+        <div
+          id="coursesContainer"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Courses will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Display Random Courses Section -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-4">Random Courses</h2>
+        <div
+          id="randomCoursesContainer"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Random courses will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Display Courses by Subject Section -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-4">Courses by Subject</h2>
+        <input
+          id="subjectInput"
+          type="text"
+          placeholder="Enter subject name"
+          class="border border-gray-300 p-2 w-full md:w-1/2 rounded-lg mb-4"
+        />
+        <button id="subjectBtn" class="bg-green-600 text-white p-2 rounded-lg">
+          Filter by Subject
+        </button>
+        <div
+          id="subjectCoursesContainer"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Subject-based courses will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Display Recommended Courses Section -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-semibold mb-4">Recommended Courses</h2>
+        <div
+          id="recommendedCoursesContainer"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Recommended courses will be injected here by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Helper function to create a course card
+      function createCourseCard(course) {
+        return `
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <img src="${
+                      course.thumbnail || "https://via.placeholder.com/150"
+                    }" alt="${
+          course.title
+        }" class="w-full h-40 object-cover rounded-md mb-4">
+                    <h3 class="text-xl font-semibold">${course.title}</h3>
+                    <p class="text-gray-500 mb-2">${course.instructor}</p>
+                    <p class="text-gray-700 mb-4">${course.description.slice(
+                      0,
+                      100
+                    )}...</p>
+                    <a href="/courses/${
+                      course.id
+                    }" class="text-blue-600 hover:underline">View Details</a>
+                </div>
+            `;
+      }
+
+      // Function to fetch and display courses
+      function fetchCourses() {
+        fetch("/courses")
+          .then((response) => response.json())
+          .then((data) => {
+            const coursesContainer =
+              document.getElementById("coursesContainer");
+            coursesContainer.innerHTML = "";
+            data.forEach((course) => {
+              coursesContainer.innerHTML += createCourseCard(course);
+            });
+          });
+      }
+
+      // Function to fetch and display random courses
+      function fetchRandomCourses() {
+        fetch("/courses/random")
+          .then((response) => response.json())
+          .then((data) => {
+            const randomCoursesContainer = document.getElementById(
+              "randomCoursesContainer"
+            );
+            randomCoursesContainer.innerHTML = "";
+            data.forEach((course) => {
+              randomCoursesContainer.innerHTML += createCourseCard(course);
+            });
+          });
+      }
+
+      // Function to fetch and display courses by subject
+      function fetchCoursesBySubject(subject) {
+        fetch(`/courses/subject?subject=${subject}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const subjectCoursesContainer = document.getElementById(
+              "subjectCoursesContainer"
+            );
+            subjectCoursesContainer.innerHTML = "";
+            data.forEach((course) => {
+              subjectCoursesContainer.innerHTML += createCourseCard(course);
+            });
+          });
+      }
+
+      // Function to fetch recommended courses (requires JWT for logged-in users)
+      function fetchRecommendedCourses(courseId) {
+        fetch(`/courses/recommend?course_id=${courseId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`, // Use token from localStorage
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const recommendedCoursesContainer = document.getElementById(
+              "recommendedCoursesContainer"
+            );
+            recommendedCoursesContainer.innerHTML = "";
+            data.forEach((course) => {
+              recommendedCoursesContainer.innerHTML += createCourseCard(course);
+            });
+          });
+      }
+
+      // Event listener for the search form
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const keyword = document.getElementById("searchKeyword").value;
+          fetch(`/courses/search?keyword=${keyword}`)
+            .then((response) => response.json())
+            .then((data) => {
+              const coursesContainer =
+                document.getElementById("coursesContainer");
+              coursesContainer.innerHTML = "";
+              data.forEach((course) => {
+                coursesContainer.innerHTML += createCourseCard(course);
+              });
+            });
+        });
+
+      // Event listener for filtering courses by subject
+      document
+        .getElementById("subjectBtn")
+        .addEventListener("click", function () {
+          const subject = document.getElementById("subjectInput").value;
+          fetchCoursesBySubject(subject);
+        });
+
+      // Fetch and display courses on page load
+      fetchCourses();
+      fetchRandomCourses();
+
+      // Optionally, you could trigger recommended courses based on a selected course ID
+      // fetchRecommendedCourses(courseId);
+    </script>
+  </body>
+</html>

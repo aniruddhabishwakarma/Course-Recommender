@@ -3,7 +3,7 @@ import os
 DATABASE_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "LEapfrog@33",
+    "password": "Dinesh@2058",
     "database": "course_recommendation"
 }
 
